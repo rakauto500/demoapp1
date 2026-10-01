@@ -29,8 +29,9 @@ UITEST_Test__BaseUrl=https://staging.example.com/ dotnet test   # deployed env
 ```
 
 `-SlowMo` pauses (ms) and highlights each element before every click and keystroke; visible runs go
-one test at a time. If PowerShell blocks scripts, use
-`powershell -ExecutionPolicy Bypass -File .\run-tests.ps1 -Headed -SlowMo 500`.
+one test at a time. If PowerShell says *running scripts is disabled*, either run
+`powershell -ExecutionPolicy Bypass -File .\run-tests.ps1 -Headed -SlowMo 500`, or allow local
+scripts once for your user: `Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned`.
 
 ### HTML dashboard
 
