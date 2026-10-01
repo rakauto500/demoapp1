@@ -36,6 +36,22 @@ public sealed class TestSettings
 
     public string ArtifactsDirectory { get; init; } = "TestResults/artifacts";
 
+    /// <summary>
+    /// Visual aid for watching a run: milliseconds to pause (with the target element
+    /// highlighted) before every click, keystroke and after every navigation.
+    /// 0 = off. Never enable in CI.
+    /// </summary>
+    public int SlowMoMs { get; init; }
+
+    /// <summary>
+    /// Folder for the HTML dashboard (index.html + history.json). Relative paths are
+    /// resolved from the repository root (the folder containing the .sln).
+    /// </summary>
+    public string ReportDirectory { get; init; } = "TestResults/report";
+
+    /// <summary>Open the HTML dashboard in the default browser when the run finishes.</summary>
+    public bool OpenReport { get; init; }
+
     private static readonly Lazy<TestSettings> Instance = new(Load);
 
     public static TestSettings Current => Instance.Value;

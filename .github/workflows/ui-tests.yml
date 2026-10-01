@@ -41,12 +41,14 @@ jobs:
           --logger "trx;LogFileName=ui-tests.trx"
           --logger "console;verbosity=normal"
 
+      # Open index.html from the downloaded artifact for the dashboard.
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: ui-test-results
           path: |
+            TestResults/report/**
             tests/**/TestResults/**/*.trx
             tests/**/TestResults/artifacts/**
           if-no-files-found: ignore

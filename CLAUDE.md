@@ -7,7 +7,10 @@ Run `dotnet build` and `dotnet test` before every commit; all tests must pass.
 ## Conventions
 - Tests contain scenarios and assertions only; locators and waits live in page objects (`Pages/`).
 - Locate elements by `data-test` attributes via `BasePage.TestId()`.
-- Explicit waits only: no `Thread.Sleep`, implicit wait stays 0.
+- Explicit waits only: no `Thread.Sleep`, implicit wait stays 0. The single exception is the
+  opt-in visual delay in `Drivers/SlowMotion.cs` (`SlowMoMs`, default 0); never use it for synchronisation.
+- Test results are recorded by `BaseTest` for the HTML dashboard (`Reporting/`); keep new
+  fixtures on `BaseTest` so they appear in the report.
 - Page methods that navigate return the next page object; page objects never assert.
 - Every test fixture derives from `BaseTest` and is `[Parallelizable(ParallelScope.All)]`.
 - `TestEnvironment` ([SetUpFixture]) must stay in the root namespace `DemoApp.UiTests`.

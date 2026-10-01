@@ -1,12 +1,14 @@
 using DemoApp.UiTests.Config;
 using DemoApp.UiTests.Infrastructure;
+using DemoApp.UiTests.Reporting;
 
 namespace DemoApp.UiTests;
 
 /// <summary>
 /// Root-namespace setup (NUnit scopes [SetUpFixture] to its namespace, so this must
 /// live in DemoApp.UiTests to cover every test). Assembly-level setup: starts the embedded web server once for the whole run
-/// (unless BaseUrl points at an external environment) and tears it down at the end.
+/// (unless BaseUrl points at an external environment) and tears it down at the end,
+/// writing the HTML dashboard once all tests have finished.
 /// </summary>
 [SetUpFixture]
 public sealed class TestEnvironment
@@ -18,6 +20,7 @@ public sealed class TestEnvironment
     [OneTimeSetUp]
     public void StartEnvironment()
     {
+        TestRunRecorder.Start();
         var settings = TestSettings.Current;
         if (!string.IsNullOrWhiteSpace(settings.BaseUrl))
         {
@@ -34,7 +37,16 @@ public sealed class TestEnvironment
     [OneTimeTearDown]
     public void StopEnvironment()
     {
-        _server?.Dispose();
-        _server = null;
+        try
+        {
+            var reportPath = HtmlReportWriter.Write(
+                TestSettings.Current, BaseUrl, TestRunRecorder.Snapshot(), TestRunRecorder.StartedAt);
+            TestContext.Progress.WriteLine($"HTML report: {reportPath}");
+        }
+        finally
+        {
+            _server?.Dispose();
+            _server = null;
+        }
     }
 }

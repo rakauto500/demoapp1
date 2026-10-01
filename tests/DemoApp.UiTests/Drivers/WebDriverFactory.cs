@@ -22,7 +22,7 @@ public static class WebDriverFactory
         driver.Manage().Timeouts().ImplicitWait = TimeSpan.FromSeconds(settings.ImplicitWaitSeconds);
         driver.Manage().Timeouts().PageLoad = TimeSpan.FromSeconds(settings.PageLoadTimeoutSeconds);
         driver.Manage().Window.Size = new Size(settings.WindowWidth, settings.WindowHeight);
-        return driver;
+        return SlowMotion.Wrap(driver, settings.SlowMoMs);
     }
 
     private static IWebDriver CreateChrome(TestSettings settings)
