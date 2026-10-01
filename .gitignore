@@ -1,0 +1,10 @@
+bin/
+obj/
+TestResults/
+*.trx
+*.user
+.vs/
+.vscode/
+.idea/
+# LibreOffice lock files
+.~lock.*#
