@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>DemoApp - Dashboard</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <span>Welcome, <strong id="welcome-user" data-test="welcome-user"></strong></span>
+    <button id="logout-button" data-test="logout-button">Log out</button>
+  </header>
+  <main class="card">
+    <h1>My Tasks</h1>
+    <form id="todo-form">
+      <input id="new-todo" placeholder="What needs to be done?" data-test="new-todo">
+      <button id="add-todo" type="submit" data-test="add-todo">Add</button>
+    </form>
+    <div class="filters" data-test="filters">
+      <button data-filter="all" class="active">All</button>
+      <button data-filter="active">Active</button>
+      <button data-filter="completed">Completed</button>
+    </div>
+    <ul id="todo-list" data-test="todo-list"></ul>
+    <p><span id="todo-count" data-test="todo-count">0</span> item(s) left</p>
+  </main>
+  <script src="app.js"></script>
+  <script>DemoApp.initDashboard();</script>
+</body>
+</html>
