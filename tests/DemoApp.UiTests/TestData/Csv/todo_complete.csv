@@ -1,0 +1,3 @@
+CaseName,Todos,Complete,ExpectedItemsLeft,Categories
+OneOfTwo,Buy milk|Walk dog,Buy milk,1,
+AllItems,Buy milk|Walk dog,Buy milk|Walk dog,0,

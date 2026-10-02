@@ -1,0 +1,2 @@
+CaseName,Username,Password,ExpectedWelcomeName,ExpectedTitle,Categories
+StandardUser,demo,secret123,demo,DemoApp - Dashboard,Smoke

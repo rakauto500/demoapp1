@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RunSettings>
+  <RunConfiguration>
+    <ResultsDirectory>./TestResults</ResultsDirectory>
+    <!-- Hard stop for a hung run (milliseconds). -->
+    <TestSessionTimeout>1800000</TestSessionTimeout>
+  </RunConfiguration>
+  <NUnit>
+    <!-- Tests run in parallel inside the assembly; see AssemblyInfo.cs. -->
+    <NumberOfTestWorkers>4</NumberOfTestWorkers>
+  </NUnit>
+</RunSettings>

@@ -1,0 +1,4 @@
+CaseName,Todos,Delete,ExpectedRemaining,Categories
+DeleteLast,Keep me|Delete me,Delete me,Keep me,
+DeleteFirst,First|Second|Third,First,Second|Third,
+DeleteOnlyItem,Lonely,Lonely,,

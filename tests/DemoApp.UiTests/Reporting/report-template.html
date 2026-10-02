@@ -1,0 +1,597 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>UI Test Report</title>
+<style>
+  :root {
+    color-scheme: light;
+    --page: #f9f9f7;
+    --surface: #fcfcfb;
+    --ink: #0b0b0b;
+    --ink-2: #52514e;
+    --muted: #898781;
+    --grid: #e1e0d9;
+    --axis: #c3c2b7;
+    --border: rgba(11, 11, 11, 0.10);
+    --accent: #2a78d6;
+    --good: #0ca30c;
+    --warning: #fab219;
+    --critical: #d03b3b;
+    --good-text: #006300;
+    --critical-text: #b42f2f;
+    --chip-good: #e3f4e3;
+    --chip-critical: #fbe7e7;
+    --chip-warning: #fdf1d3;
+    --code-bg: #f0efec;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --page: #0d0d0d;
+      --surface: #1a1a19;
+      --ink: #ffffff;
+      --ink-2: #c3c2b7;
+      --muted: #898781;
+      --grid: #2c2c2a;
+      --axis: #383835;
+      --border: rgba(255, 255, 255, 0.10);
+      --accent: #3987e5;
+      --good-text: #0ca30c;
+      --critical-text: #e66767;
+      --chip-good: #12301a;
+      --chip-critical: #3a1717;
+      --chip-warning: #3a2e10;
+      --code-bg: #242422;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --page: #0d0d0d;
+    --surface: #1a1a19;
+    --ink: #ffffff;
+    --ink-2: #c3c2b7;
+    --muted: #898781;
+    --grid: #2c2c2a;
+    --axis: #383835;
+    --border: rgba(255, 255, 255, 0.10);
+    --accent: #3987e5;
+    --good-text: #0ca30c;
+    --critical-text: #e66767;
+    --chip-good: #12301a;
+    --chip-critical: #3a1717;
+    --chip-warning: #3a2e10;
+    --code-bg: #242422;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--page);
+    color: var(--ink);
+    font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  .wrap { max-width: 1200px; margin: 0 auto; padding: 24px 16px 48px; }
+  header { display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: flex-start; justify-content: space-between; margin-bottom: 20px; }
+  h1 { font-size: 22px; margin: 0 0 4px; font-weight: 650; }
+  h2 { font-size: 15px; margin: 0 0 2px; font-weight: 600; }
+  .sub { color: var(--ink-2); font-size: 13px; overflow-wrap: anywhere; }
+  .meta { color: var(--muted); font-size: 12px; margin-top: 4px; overflow-wrap: anywhere; }
+  header > div:first-child { min-width: 0; flex: 1 1 260px; }
+  .header-right { display: flex; gap: 8px; align-items: center; }
+  .verdict { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 999px; font-weight: 600; font-size: 13px; }
+  .verdict.ok { background: var(--chip-good); color: var(--good-text); }
+  .verdict.bad { background: var(--chip-critical); color: var(--critical-text); }
+  .icon-btn { border: 1px solid var(--border); background: var(--surface); color: var(--ink-2); border-radius: 8px; padding: 6px 10px; cursor: pointer; font: inherit; font-size: 12px; }
+
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; min-width: 0; }
+  .card .sub { margin-bottom: 12px; }
+
+  .kpis { display: grid; grid-template-columns: 1.4fr repeat(5, 1fr); gap: 12px; margin-bottom: 12px; }
+  .kpi .label { color: var(--ink-2); font-size: 12px; }
+  .kpi .value { font-size: 26px; font-weight: 600; margin-top: 4px; }
+  .kpi .hint { color: var(--muted); font-size: 12px; margin-top: 2px; }
+  .kpi.hero .value { font-size: 52px; line-height: 1.05; }
+  .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; vertical-align: 0; }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+  .full { margin-bottom: 12px; }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 12px; color: var(--ink-2); margin-bottom: 8px; }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .swatch { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+
+  svg { display: block; width: 100%; overflow: visible; }
+  svg text { fill: var(--ink-2); font-size: 12px; font-family: inherit; }
+  svg .tick { fill: var(--muted); font-size: 11px; font-variant-numeric: tabular-nums; }
+  svg .value-label { fill: var(--ink); font-size: 12px; font-weight: 600; }
+  svg .gridline { stroke: var(--grid); stroke-width: 1; }
+  svg .baseline { stroke: var(--axis); stroke-width: 1; }
+  svg .hit { fill: transparent; cursor: default; }
+  svg .hit:focus { outline: none; }
+  svg .hit:focus-visible { stroke: var(--accent); stroke-width: 2; }
+  svg .band-hover { fill: var(--ink); opacity: 0; }
+  svg .band-hover.on { opacity: 0.05; }
+
+  .tooltip {
+    position: fixed; pointer-events: none; z-index: 10; display: none;
+    background: var(--surface); color: var(--ink); border: 1px solid var(--border);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12); border-radius: 8px; padding: 8px 10px; font-size: 12px; min-width: 140px;
+  }
+  .tooltip .t-title { font-weight: 600; margin-bottom: 4px; }
+  .tooltip .t-row { display: flex; align-items: center; gap: 6px; color: var(--ink-2); }
+  .tooltip .t-row b { margin-left: auto; color: var(--ink); font-variant-numeric: tabular-nums; padding-left: 12px; }
+
+  .filters { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 12px; }
+  .filters input { flex: 1 1 220px; min-width: 0; padding: 7px 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--page); color: var(--ink); font: inherit; }
+  .seg { display: inline-flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  .seg button { border: 0; background: transparent; color: var(--ink-2); padding: 7px 12px; font: inherit; font-size: 13px; cursor: pointer; }
+  .seg button + button { border-left: 1px solid var(--border); }
+  .seg button.active { background: var(--code-bg); color: var(--ink); font-weight: 600; }
+
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; color: var(--ink-2); font-weight: 600; font-size: 12px; padding: 8px; border-bottom: 1px solid var(--axis); white-space: nowrap; cursor: pointer; user-select: none; }
+  th .arrow { color: var(--muted); }
+  td { padding: 8px; border-bottom: 1px solid var(--grid); vertical-align: top; }
+  td.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  th.num { text-align: right; }
+  tr.row { cursor: pointer; }
+  tr.row:hover td { background: var(--code-bg); }
+  tr.row:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+  .test-name { font-weight: 550; word-break: break-word; }
+  .chip { display: inline-flex; align-items: center; gap: 5px; padding: 2px 8px; border-radius: 999px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+  .chip.Passed { background: var(--chip-good); color: var(--good-text); }
+  .chip.Failed { background: var(--chip-critical); color: var(--critical-text); }
+  .chip.Skipped, .chip.Inconclusive { background: var(--chip-warning); color: var(--ink); }
+  .cat { display: inline-block; font-size: 11px; color: var(--ink-2); border: 1px solid var(--border); border-radius: 6px; padding: 0 6px; margin: 0 4px 2px 0; }
+  .details td { background: var(--page); max-width: 0; }
+  pre { background: var(--code-bg); padding: 10px; border-radius: 8px; overflow-x: auto; white-space: pre-wrap; word-break: break-word; font: 12px/1.45 ui-monospace, "Cascadia Mono", Consolas, monospace; margin: 6px 0; }
+  .shot { display: block; width: 100%; max-width: 560px; height: auto; border: 1px solid var(--border); border-radius: 8px; margin-top: 6px; cursor: zoom-in; }
+  .shot.zoom { max-width: 100%; cursor: zoom-out; }
+  .empty { color: var(--muted); padding: 16px 8px; text-align: center; }
+
+  .failure { border-left: 3px solid var(--critical); padding: 8px 0 8px 12px; margin-bottom: 12px; }
+  .failure:last-child { margin-bottom: 0; }
+
+  @media (max-width: 900px) {
+    .kpis { grid-template-columns: repeat(3, 1fr); }
+    .kpi.hero { grid-column: 1 / -1; }
+    .grid-2 { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 480px) {
+    .kpis { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>UI Test Report</h1>
+      <div class="sub" id="subtitle"></div>
+      <div class="meta" id="meta"></div>
+    </div>
+    <div class="header-right">
+      <span class="verdict" id="verdict"></span>
+      <button class="icon-btn" id="theme-toggle" type="button" title="Toggle light/dark">◐ Theme</button>
+    </div>
+  </header>
+
+  <section class="kpis" id="kpis"></section>
+
+  <section class="card full" id="failures-card" hidden>
+    <h2>Failures</h2>
+    <div class="sub">Error message and the browser screenshot captured when the test failed.</div>
+    <div id="failures"></div>
+  </section>
+
+  <section class="grid-2">
+    <div class="card">
+      <h2>Results by category</h2>
+      <div class="sub">Tests per NUnit category; a test can belong to several.</div>
+      <div class="legend" id="cat-legend"></div>
+      <div id="cat-chart"></div>
+    </div>
+    <div class="card">
+      <h2>Slowest tests</h2>
+      <div class="sub">Seconds per test, including browser start-up.</div>
+      <div id="slow-chart"></div>
+    </div>
+  </section>
+
+  <section class="card full">
+    <h2>Run history</h2>
+    <div class="sub" id="history-sub"></div>
+    <div class="legend" id="hist-legend"></div>
+    <div id="history-chart"></div>
+  </section>
+
+  <section class="card full">
+    <h2>All tests</h2>
+    <div class="sub">Click a row for details.</div>
+    <div class="filters">
+      <input id="search" type="search" placeholder="Search test, fixture or category…" aria-label="Search tests">
+      <div class="seg" id="status-filter" role="group" aria-label="Filter by status">
+        <button type="button" data-status="all" class="active">All</button>
+        <button type="button" data-status="Passed">Passed</button>
+        <button type="button" data-status="Failed">Failed</button>
+        <button type="button" data-status="Skipped">Skipped</button>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th data-sort="outcome">Status <span class="arrow"></span></th>
+            <th data-sort="name">Test <span class="arrow"></span></th>
+            <th data-sort="fixture">Fixture <span class="arrow"></span></th>
+            <th>Categories</th>
+            <th data-sort="durationSeconds" class="num">Duration <span class="arrow"></span></th>
+          </tr>
+        </thead>
+        <tbody id="results-body"></tbody>
+      </table>
+    </div>
+  </section>
+</div>
+<div class="tooltip" id="tooltip" role="tooltip"></div>
+
+<script>
+const DATA = "__REPORT_DATA__";
+
+(() => {
+  const SVG_NS = "http://www.w3.org/2000/svg";
+  const STATUS = [
+    { key: "passed", outcome: "Passed", label: "Passed", icon: "✓", color: "var(--good)" },
+    { key: "failed", outcome: "Failed", label: "Failed", icon: "✗", color: "var(--critical)" },
+    { key: "skipped", outcome: "Skipped", label: "Skipped", icon: "⊘", color: "var(--warning)" },
+  ];
+  const run = DATA.run;
+  const results = DATA.results.map((r) => ({ ...r, outcome: r.outcome === "Inconclusive" ? "Skipped" : r.outcome }));
+  const history = DATA.history || [];
+
+  const fmtTime = (iso) => new Date(iso).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
+  const fmtSec = (s) => (s >= 60 ? `${Math.floor(s / 60)}m ${Math.round(s % 60)}s` : `${s.toFixed(s < 10 ? 1 : 0)}s`);
+  const pct = (n, d) => (d === 0 ? 0 : Math.round((n / d) * 1000) / 10);
+  const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+  const el = (tag, attrs = {}, parent) => {
+    const node = document.createElementNS(SVG_NS, tag);
+    for (const [k, v] of Object.entries(attrs)) node.setAttribute(k, v);
+    if (parent) parent.appendChild(node);
+    return node;
+  };
+
+  // ---------- Theme ----------
+  const root = document.documentElement;
+  try {
+    const saved = localStorage.getItem("ui-report-theme");
+    if (saved) root.dataset.theme = saved;
+  } catch (_) { /* storage unavailable: follow OS */ }
+  document.getElementById("theme-toggle").addEventListener("click", () => {
+    const dark = root.dataset.theme ? root.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+    root.dataset.theme = dark ? "light" : "dark";
+    try { localStorage.setItem("ui-report-theme", root.dataset.theme); } catch (_) { /* ignore */ }
+  });
+
+  // ---------- Header & KPIs ----------
+  document.getElementById("subtitle").textContent =
+    `${run.browser}${run.headless ? " (headless)" : ""} · ${fmtTime(run.startedAt)} · ${run.baseUrl}`;
+  document.getElementById("meta").textContent = `${run.machine} · ${run.os}`;
+  const verdict = document.getElementById("verdict");
+  if (run.failed > 0) {
+    verdict.className = "verdict bad";
+    verdict.textContent = `✗ ${run.failed} test${run.failed === 1 ? "" : "s"} failed`;
+  } else {
+    verdict.className = "verdict ok";
+    verdict.textContent = run.total > 0 ? "✓ All tests passed" : "No tests ran";
+  }
+
+  const passRate = pct(run.passed, run.total);
+  const kpis = [
+    { cls: "hero", label: "Pass rate", value: `${passRate}%`, hint: `${run.passed} of ${run.total} tests` },
+    { label: "Total", value: run.total, hint: "tests run" },
+    { label: "Passed", value: run.passed, dot: "var(--good)" },
+    { label: "Failed", value: run.failed, dot: "var(--critical)" },
+    { label: "Skipped", value: run.skipped, dot: "var(--warning)" },
+    { label: "Duration", value: fmtSec(run.durationSeconds), hint: "wall clock" },
+  ];
+  document.getElementById("kpis").innerHTML = kpis.map((k) => `
+    <div class="card kpi ${k.cls || ""}">
+      <div class="label">${k.dot ? `<span class="dot" style="background:${k.dot}"></span>` : ""}${esc(k.label)}</div>
+      <div class="value">${esc(k.value)}</div>
+      ${k.hint ? `<div class="hint">${esc(k.hint)}</div>` : ""}
+    </div>`).join("");
+
+  // ---------- Failures ----------
+  const failed = results.filter((r) => r.outcome === "Failed");
+  if (failed.length) {
+    document.getElementById("failures-card").hidden = false;
+    document.getElementById("failures").innerHTML = failed.map((r) => `
+      <div class="failure">
+        <div class="test-name">${esc(r.name)} <span class="sub">· ${esc(r.fixture)}</span></div>
+        ${r.message ? `<pre>${esc(r.message)}</pre>` : ""}
+        ${r.screenshotBase64 ? `<img class="shot" title="Click to enlarge" alt="Screenshot of ${esc(r.name)} at failure" src="data:image/png;base64,${r.screenshotBase64}">` : ""}
+      </div>`).join("");
+  }
+
+  document.addEventListener("click", (e) => {
+    if (e.target.classList && e.target.classList.contains("shot")) { e.stopPropagation(); e.target.classList.toggle("zoom"); }
+  }, true);
+
+  // ---------- Tooltip ----------
+  const tip = document.getElementById("tooltip");
+  const showTip = (evt, html) => {
+    tip.innerHTML = html;
+    tip.style.display = "block";
+    const box = tip.getBoundingClientRect();
+    let x, y;
+    if (evt.clientX !== undefined && evt.type.startsWith("mouse")) {
+      x = evt.clientX + 14; y = evt.clientY + 14;
+    } else {
+      const r = evt.target.getBoundingClientRect();
+      x = r.right + 8; y = r.top;
+    }
+    if (x + box.width > innerWidth - 8) x = Math.max(8, x - box.width - 28);
+    if (y + box.height > innerHeight - 8) y = Math.max(8, innerHeight - box.height - 8);
+    tip.style.left = `${x}px`; tip.style.top = `${y}px`;
+  };
+  const hideTip = () => { tip.style.display = "none"; };
+  const tipRows = (title, rows) =>
+    `<div class="t-title">${esc(title)}</div>` +
+    rows.map((r) => `<div class="t-row">${r.color ? `<span class="swatch" style="background:${r.color}"></span>` : ""}${esc(r.label)}<b>${esc(r.value)}</b></div>`).join("");
+  const bindTip = (node, html, onEnter, onLeave) => {
+    node.setAttribute("tabindex", "0");
+    node.addEventListener("mousemove", (e) => showTip(e, html));
+    node.addEventListener("mouseenter", () => onEnter && onEnter());
+    node.addEventListener("mouseleave", () => { hideTip(); onLeave && onLeave(); });
+    node.addEventListener("focus", (e) => { showTip(e, html); onEnter && onEnter(); });
+    node.addEventListener("blur", () => { hideTip(); onLeave && onLeave(); });
+  };
+
+  // Rect with 4px rounded data-end (right for horizontal, top for vertical), square at the baseline.
+  const barPath = (x, y, w, h, roundEnd, dir) => {
+    const r = Math.min(4, roundEnd ? (dir === "h" ? Math.min(w, h / 2) : Math.min(h, w / 2)) : 0);
+    if (w <= 0 || h <= 0) return "";
+    if (dir === "h") {
+      return `M${x},${y}H${x + w - r}Q${x + w},${y} ${x + w},${y + r}V${y + h - r}Q${x + w},${y + h} ${x + w - r},${y + h}H${x}Z`;
+    }
+    return `M${x},${y + h}V${y + r}Q${x},${y} ${x + r},${y}H${x + w - r}Q${x + w},${y} ${x + w},${y + r}V${y + h}Z`;
+  };
+
+  const legend = (id, items) => {
+    document.getElementById(id).innerHTML = items.map((s) =>
+      `<span><span class="swatch" style="background:${s.color}"></span>${s.icon} ${s.label}</span>`).join("");
+  };
+
+  const niceMax = (v) => {
+    if (v <= 5) return Math.max(1, Math.ceil(v));
+    const pow = 10 ** Math.floor(Math.log10(v));
+    const n = v / pow;
+    return (n <= 2 ? 2 : n <= 5 ? 5 : 10) * pow;
+  };
+
+  // ---------- Chart: results by category (horizontal stacked bars) ----------
+  function renderCategories() {
+    const host = document.getElementById("cat-chart");
+    const byCat = new Map();
+    for (const r of results) {
+      for (const c of (r.categories.length ? r.categories : ["(none)"])) {
+        if (!byCat.has(c)) byCat.set(c, { name: c, passed: 0, failed: 0, skipped: 0, total: 0 });
+        const row = byCat.get(c);
+        row[r.outcome === "Passed" ? "passed" : r.outcome === "Failed" ? "failed" : "skipped"]++;
+        row.total++;
+      }
+    }
+    const rows = [...byCat.values()].sort((a, b) => b.total - a.total || a.name.localeCompare(b.name));
+    const present = STATUS.filter((s) => rows.some((r) => r[s.key] > 0));
+    legend("cat-legend", present);
+    host.innerHTML = "";
+    if (!rows.length) { host.innerHTML = '<div class="empty">No results</div>'; return; }
+
+    const width = host.clientWidth || 500;
+    const labelW = Math.min(110, width * 0.3);
+    const valueW = 72;
+    const band = 34, barH = 20;
+    const plotW = Math.max(40, width - labelW - valueW);
+    const max = Math.max(...rows.map((r) => r.total));
+    const height = rows.length * band;
+    const svg = el("svg", { viewBox: `0 0 ${width} ${height}`, height, role: "img", "aria-label": "Results by category" }, host);
+    el("line", { x1: labelW, x2: labelW, y1: 0, y2: height, class: "baseline" }, svg);
+
+    rows.forEach((row, i) => {
+      const y = i * band + (band - barH) / 2;
+      const name = el("text", { x: labelW - 8, y: y + barH / 2 + 4, "text-anchor": "end" }, svg);
+      name.textContent = row.name;
+      let x = labelW;
+      const segs = present.filter((s) => row[s.key] > 0);
+      segs.forEach((s, j) => {
+        const isLast = j === segs.length - 1;
+        const fullW = (row[s.key] / max) * plotW;
+        const w = Math.max(1, fullW - (isLast ? 0 : 2)); // 2px surface gap between segments
+        el("path", { d: barPath(x, y, w, barH, isLast, "h"), fill: s.color }, svg);
+        x += fullW;
+      });
+      const label = el("text", { x: x + 8, y: y + barH / 2 + 4, class: "value-label" }, svg);
+      label.textContent = `${row.passed}/${row.total}`;
+      const hit = el("rect", { x: 0, y: i * band, width, height: band, class: "hit" }, svg);
+      bindTip(hit, tipRows(row.name, [
+        ...STATUS.map((s) => ({ label: `${s.icon} ${s.label}`, value: row[s.key], color: s.color })),
+        { label: "Pass rate", value: `${pct(row.passed, row.total)}%` },
+      ]));
+    });
+  }
+
+  // ---------- Chart: slowest tests (single-hue horizontal bars) ----------
+  function renderSlowest() {
+    const host = document.getElementById("slow-chart");
+    host.innerHTML = "";
+    const rows = [...results].sort((a, b) => b.durationSeconds - a.durationSeconds).slice(0, 8);
+    if (!rows.length) { host.innerHTML = '<div class="empty">No results</div>'; return; }
+    const width = host.clientWidth || 500;
+    const labelW = Math.min(230, width * 0.48);
+    const valueW = 52;
+    const band = 30, barH = 18;
+    const plotW = Math.max(40, width - labelW - valueW);
+    const max = Math.max(...rows.map((r) => r.durationSeconds), 0.001);
+    const height = rows.length * band;
+    const svg = el("svg", { viewBox: `0 0 ${width} ${height}`, height, role: "img", "aria-label": "Slowest tests" }, host);
+    el("line", { x1: labelW, x2: labelW, y1: 0, y2: height, class: "baseline" }, svg);
+    const maxChars = Math.floor((labelW - 10) / 6.4);
+
+    rows.forEach((r, i) => {
+      const y = i * band + (band - barH) / 2;
+      const name = el("text", { x: labelW - 8, y: y + barH / 2 + 4, "text-anchor": "end" }, svg);
+      name.textContent = r.name.length > maxChars ? r.name.slice(0, maxChars - 1) + "…" : r.name;
+      const w = Math.max(2, (r.durationSeconds / max) * plotW);
+      el("path", { d: barPath(labelW, y, w, barH, true, "h"), fill: "var(--accent)" }, svg);
+      const v = el("text", { x: labelW + w + 6, y: y + barH / 2 + 4, class: "value-label" }, svg);
+      v.textContent = `${r.durationSeconds.toFixed(1)}s`;
+      const hit = el("rect", { x: 0, y: i * band, width, height: band, class: "hit" }, svg);
+      bindTip(hit, tipRows(r.name, [
+        { label: "Fixture", value: r.fixture },
+        { label: "Duration", value: `${r.durationSeconds.toFixed(2)}s` },
+        { label: "Status", value: r.outcome },
+      ]));
+    });
+  }
+
+  // ---------- Chart: run history (stacked columns) ----------
+  function renderHistory() {
+    const host = document.getElementById("history-chart");
+    host.innerHTML = "";
+    document.getElementById("history-sub").textContent =
+      `Last ${history.length} run${history.length === 1 ? "" : "s"} on this machine (history.json next to the report). Most recent on the right.`;
+    const present = STATUS.filter((s) => history.some((h) => h[s.key] > 0));
+    legend("hist-legend", present);
+    if (!history.length) return;
+
+    const width = host.clientWidth || 900;
+    const height = 200, axisH = 22, top = 8, left = 34;
+    const plotH = height - axisH - top;
+    const plotW = width - left;
+    const max = niceMax(Math.max(...history.map((h) => h.total), 1));
+    const svg = el("svg", { viewBox: `0 0 ${width} ${height}`, height, role: "img", "aria-label": "Run history" }, host);
+    const yOf = (v) => top + plotH - (v / max) * plotH;
+
+    const ticks = max <= 5 ? max : 4;
+    for (let t = 0; t <= ticks; t++) {
+      const v = Math.round((max / ticks) * t);
+      const y = yOf(v);
+      if (t > 0) el("line", { x1: left, x2: width, y1: y, y2: y, class: "gridline" }, svg);
+      const lab = el("text", { x: left - 6, y: y + 4, "text-anchor": "end", class: "tick" }, svg);
+      lab.textContent = v.toLocaleString();
+    }
+    el("line", { x1: left, x2: width, y1: yOf(0), y2: yOf(0), class: "baseline" }, svg);
+
+    const slot = plotW / Math.max(history.length, 1);
+    const colW = Math.min(24, Math.max(4, slot * 0.6));
+    history.forEach((h, i) => {
+      const cx = left + slot * i + slot / 2;
+      const x = cx - colW / 2;
+      const hover = el("rect", { x: left + slot * i, y: top, width: slot, height: plotH, class: "band-hover" }, svg);
+      let acc = 0;
+      const segs = present.filter((s) => h[s.key] > 0);
+      segs.forEach((s, j) => {
+        const isLast = j === segs.length - 1;
+        const y0 = yOf(acc), y1 = yOf(acc + h[s.key]);
+        const hgt = Math.max(1, y0 - y1 - (isLast ? 0 : 2)); // 2px surface gap
+        el("path", { d: barPath(x, y0 - hgt, colW, hgt, isLast, "v"), fill: s.color }, svg);
+        acc += h[s.key];
+      });
+      const isLatest = i === history.length - 1;
+      if (isLatest || i === 0) {
+        const lab = el("text", { x: cx, y: height - 6, "text-anchor": isLatest && history.length > 1 ? "end" : "middle", class: "tick" }, svg);
+        if (isLatest && history.length > 1) lab.setAttribute("x", Math.min(width, cx + colW / 2));
+        if (i === 0 && history.length > 1) { lab.setAttribute("text-anchor", "start"); lab.setAttribute("x", Math.max(left, cx - colW / 2)); }
+        lab.textContent = isLatest ? "Latest" : new Date(h.startedAt).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+      }
+      if (isLatest) {
+        const cap = el("text", { x: cx, y: yOf(h.total) - 6, "text-anchor": "middle", class: "value-label" }, svg);
+        cap.textContent = `${h.passed}/${h.total}`;
+      }
+      const hit = el("rect", { x: left + slot * i, y: top, width: slot, height: plotH + axisH, class: "hit" }, svg);
+      bindTip(hit, tipRows(fmtTime(h.startedAt), [
+        ...STATUS.map((s) => ({ label: `${s.icon} ${s.label}`, value: h[s.key], color: s.color })),
+        { label: "Pass rate", value: `${pct(h.passed, h.total)}%` },
+        { label: "Duration", value: fmtSec(h.durationSeconds) },
+        { label: "Browser", value: h.browser },
+      ]), () => hover.classList.add("on"), () => hover.classList.remove("on"));
+    });
+  }
+
+  // ---------- Table ----------
+  const state = { search: "", status: "all", sort: "outcome", dir: 1, open: new Set() };
+  const outcomeRank = { Failed: 0, Skipped: 1, Passed: 2 };
+  function renderTable() {
+    const q = state.search.toLowerCase();
+    const rows = results
+      .filter((r) => state.status === "all" || r.outcome === state.status)
+      .filter((r) => !q || [r.name, r.fixture, ...r.categories].some((v) => v.toLowerCase().includes(q)))
+      .sort((a, b) => {
+        let c;
+        if (state.sort === "outcome") c = outcomeRank[a.outcome] - outcomeRank[b.outcome];
+        else if (state.sort === "durationSeconds") c = a.durationSeconds - b.durationSeconds;
+        else c = String(a[state.sort]).localeCompare(String(b[state.sort]));
+        return c * state.dir || a.name.localeCompare(b.name);
+      });
+
+    document.querySelectorAll("th[data-sort]").forEach((th) => {
+      th.querySelector(".arrow").textContent = th.dataset.sort === state.sort ? (state.dir > 0 ? "▲" : "▼") : "";
+    });
+
+    const body = document.getElementById("results-body");
+    if (!rows.length) { body.innerHTML = '<tr><td colspan="5" class="empty">No tests match the filter.</td></tr>'; return; }
+    const icon = { Passed: "✓", Failed: "✗", Skipped: "⊘" };
+    body.innerHTML = rows.map((r) => {
+      const open = state.open.has(r.fullName);
+      const details = open ? `
+        <tr class="details"><td colspan="5">
+          <div class="sub">${esc(r.fullName)} · started ${esc(fmtTime(r.startedAt))}</div>
+          ${r.message ? `<pre>${esc(r.message)}</pre>` : '<div class="sub">No message.</div>'}
+          ${r.stackTrace ? `<pre>${esc(r.stackTrace)}</pre>` : ""}
+          ${r.screenshotBase64 ? `<img class="shot" title="Click to enlarge" alt="Screenshot at failure" src="data:image/png;base64,${r.screenshotBase64}">` : ""}
+        </td></tr>` : "";
+      return `
+        <tr class="row" tabindex="0" data-id="${esc(r.fullName)}" aria-expanded="${open}">
+          <td><span class="chip ${r.outcome}">${icon[r.outcome] || ""} ${r.outcome}</span></td>
+          <td class="test-name">${esc(r.name)}</td>
+          <td>${esc(r.fixture)}</td>
+          <td>${r.categories.map((c) => `<span class="cat">${esc(c)}</span>`).join("")}</td>
+          <td class="num">${r.durationSeconds.toFixed(2)}s</td>
+        </tr>${details}`;
+    }).join("");
+  }
+
+  document.getElementById("results-body").addEventListener("click", (e) => {
+    const row = e.target.closest("tr.row");
+    if (!row) return;
+    const id = row.dataset.id;
+    state.open.has(id) ? state.open.delete(id) : state.open.add(id);
+    renderTable();
+  });
+  document.getElementById("results-body").addEventListener("keydown", (e) => {
+    if ((e.key === "Enter" || e.key === " ") && e.target.matches("tr.row")) { e.preventDefault(); e.target.click(); }
+  });
+  document.getElementById("search").addEventListener("input", (e) => { state.search = e.target.value; renderTable(); });
+  document.querySelectorAll("#status-filter button").forEach((b) => b.addEventListener("click", () => {
+    state.status = b.dataset.status;
+    document.querySelectorAll("#status-filter button").forEach((x) => x.classList.toggle("active", x === b));
+    renderTable();
+  }));
+  document.querySelectorAll("th[data-sort]").forEach((th) => th.addEventListener("click", () => {
+    state.dir = state.sort === th.dataset.sort ? -state.dir : 1;
+    state.sort = th.dataset.sort;
+    renderTable();
+  }));
+
+  const renderCharts = () => { renderCategories(); renderSlowest(); renderHistory(); };
+  renderCharts();
+  renderTable();
+  let resizeTimer;
+  addEventListener("resize", () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(renderCharts, 120); });
+})();
+</script>
+</body>
+</html>

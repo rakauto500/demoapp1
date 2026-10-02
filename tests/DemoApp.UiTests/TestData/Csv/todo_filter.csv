@@ -1,0 +1,4 @@
+CaseName,Todos,Complete,Filter,ExpectedVisible,Categories
+ActiveFilter,Done task|Open task,Done task,Active,Open task,
+CompletedFilter,Done task|Open task,Done task,Completed,Done task,
+AllFilter,Done task|Open task,Done task,All,Done task|Open task,
