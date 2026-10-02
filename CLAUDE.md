@@ -20,6 +20,11 @@ Run `dotnet build` and `dotnet test` before every commit; all tests must pass.
 - Every test fixture derives from `BaseTest` and is `[Parallelizable(ParallelScope.All)]`.
 - `TestEnvironment` ([SetUpFixture]) must stay in the root namespace `DemoApp.UiTests`.
 
+## CI/CD
+GitHub Actions: `ci.yml` (PRs/branches), `cd.yml` (main → test gate → deploy `app/` to GitHub Pages →
+live tests → dashboard at `/report/`), `nightly.yml` (scheduled live regression), shared `live-tests.yml`.
+Run `actionlint` on workflow changes. Every Pages deployment must contain both `app/` and `report/`.
+
 ## Living design document (mandatory)
 `docs/Selenium-Test-Automation-Design.odt` is the master design document and must stay current.
 In the same commit as any change to architecture, dependencies/versions, configuration,

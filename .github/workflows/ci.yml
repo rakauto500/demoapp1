@@ -1,15 +1,24 @@
-name: UI tests
+# CI: build and run the full UI suite against the embedded server on every
+# pull request and every push to a branch other than main (main is handled by cd.yml).
+name: CI
 
 on:
-  push:
-    branches: [main, "claude/**"]
   pull_request:
+  push:
+    branches-ignore: [main]
   workflow_dispatch:
     inputs:
       browser:
         description: Browser to run (Chrome, Firefox, Edge)
         default: Chrome
         required: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   ui-tests:

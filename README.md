@@ -1,5 +1,12 @@
 # DemoApp – Selenium UI Test Automation (C# / .NET 8 / NUnit)
 
+[![CI](https://github.com/rakauto500/demoapp1/actions/workflows/ci.yml/badge.svg)](https://github.com/rakauto500/demoapp1/actions/workflows/ci.yml)
+[![CD](https://github.com/rakauto500/demoapp1/actions/workflows/cd.yml/badge.svg)](https://github.com/rakauto500/demoapp1/actions/workflows/cd.yml)
+[![Nightly regression](https://github.com/rakauto500/demoapp1/actions/workflows/nightly.yml/badge.svg)](https://github.com/rakauto500/demoapp1/actions/workflows/nightly.yml)
+
+- Live app: https://rakauto500.github.io/demoapp1/
+- Latest test dashboard: https://rakauto500.github.io/demoapp1/report/
+
 End-to-end UI tests for a small demo web app, built with **Selenium WebDriver 4**,
 **NUnit 5** and the **Page Object Model** on **.NET 8**.
 
@@ -55,6 +62,18 @@ All tests are data driven: inputs and expected results live in CSV files in
 scenario, one row per test case. Add a row → you get a new test; no code changes. See the README in
 that folder for the columns of each file.
 
+## CI/CD (GitHub Actions)
+
+| Workflow | When | What |
+|----------|------|------|
+| `ci.yml` – **CI** | Every pull request and push to a non-main branch | Build + all tests against the embedded server; TRX, dashboard and failure screenshots as artifacts |
+| `cd.yml` – **CD** | Every push/merge to `main` | 1. Test gate (embedded server) → 2. deploy `app/` to GitHub Pages and wait until live → 3. all tests against the live URL → 4. publish the dashboard (with run history) to `/report/` |
+| `nightly.yml` – **Nightly regression** | 03:17 UTC daily (+ manual) | All tests against the live site; dashboard republished |
+| `live-tests.yml` | Called by CD and Nightly | Shared "test live site + publish dashboard" jobs |
+
+One-time setup: **Settings → Pages → Build and deployment → Source: GitHub Actions**. GitHub Pages on a
+private repository needs GitHub Pro/Team (or make the repository public).
+
 ## Layout
 
 ```
@@ -70,5 +89,5 @@ tests/DemoApp.UiTests/
   Tests/       BaseTest + LoginTests + TodoTests
 docs/        Design document (.odt)
 run-tests.ps1  Windows launcher (headed / slow motion / open report)
-.github/workflows/ui-tests.yml   CI on every push / PR
+.github/workflows/  ci.yml, cd.yml, nightly.yml, live-tests.yml
 ```

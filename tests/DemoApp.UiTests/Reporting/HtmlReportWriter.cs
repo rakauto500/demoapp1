@@ -43,6 +43,9 @@ public static class HtmlReportWriter
             BaseUrl = baseUrl,
             Machine = Environment.MachineName,
             Os = System.Runtime.InteropServices.RuntimeInformation.OSDescription,
+            Trigger = Environment.GetEnvironmentVariable("GITHUB_EVENT_NAME") ?? "local",
+            Commit = ShortSha(Environment.GetEnvironmentVariable("GITHUB_SHA")),
+            RunUrl = GitHubRunUrl(),
         };
 
         var historyPath = Path.Combine(directory, "history.json");
@@ -68,6 +71,17 @@ public static class HtmlReportWriter
         }
 
         return reportPath;
+    }
+
+    private static string? ShortSha(string? sha) => string.IsNullOrEmpty(sha) ? null : sha[..Math.Min(7, sha.Length)];
+
+    /// <summary>Link to the GitHub Actions run that produced the report, when running in Actions.</summary>
+    private static string? GitHubRunUrl()
+    {
+        var server = Environment.GetEnvironmentVariable("GITHUB_SERVER_URL");
+        var repository = Environment.GetEnvironmentVariable("GITHUB_REPOSITORY");
+        var runId = Environment.GetEnvironmentVariable("GITHUB_RUN_ID");
+        return server is null || repository is null || runId is null ? null : $"{server}/{repository}/actions/runs/{runId}";
     }
 
     /// <summary>Relative paths resolve from the repository root (folder containing the .sln).</summary>
@@ -150,5 +164,14 @@ public static class HtmlReportWriter
         public string Machine { get; init; } = string.Empty;
 
         public string Os { get; init; } = string.Empty;
+
+        /// <summary>GitHub event that started the run (push, schedule, …) or "local".</summary>
+        public string Trigger { get; init; } = "local";
+
+        /// <summary>Short commit SHA under test (GitHub Actions only).</summary>
+        public string? Commit { get; init; }
+
+        /// <summary>Link to the GitHub Actions run (GitHub Actions only).</summary>
+        public string? RunUrl { get; init; }
     }
 }
