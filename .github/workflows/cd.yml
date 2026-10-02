@@ -1,0 +1,108 @@
+# CD: on every merge to main
+#   1. gate    – build + full UI suite against the embedded server (nothing deploys if red)
+#   2. deploy  – publish the demo app to GitHub Pages and wait until the new version is live
+#   3. live    – run the full suite against the live URL and publish the HTML dashboard
+#                to <site>/report/ (reusable workflow live-tests.yml)
+name: CD
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# One Pages deployment at a time; never cancel a deployment half-way.
+concurrency:
+  group: github-pages
+  cancel-in-progress: false
+
+env:
+  DOTNET_NOLOGO: "1"
+  DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+
+jobs:
+  gate:
+    name: Test before deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - run: dotnet build --configuration Release
+      - name: Test (embedded server)
+        run: >
+          dotnet test --no-build --configuration Release
+          --logger "trx;LogFileName=ui-tests.trx"
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gate-test-results
+          path: |
+            TestResults/report/**
+            tests/**/TestResults/**/*.trx
+            tests/**/TestResults/artifacts/**
+          if-no-files-found: ignore
+
+  deploy:
+    name: Deploy app to GitHub Pages
+    needs: gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: pages
+        uses: actions/configure-pages@v5
+
+      - name: Assemble site
+        env:
+          BASE: ${{ steps.pages.outputs.base_url }}
+        run: |
+          mkdir -p _site/report
+          cp -r app/. _site/
+          echo "${GITHUB_SHA}" > _site/version.txt
+          # Keep the last published dashboard visible until the live run replaces it.
+          curl -fsSL "$BASE/report/index.html" -o _site/report/index.html || rm -f _site/report/index.html
+          curl -fsSL "$BASE/report/history.json" -o _site/report/history.json || rm -f _site/report/history.json
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          name: app-site
+          path: _site
+
+      - id: deployment
+        uses: actions/deploy-pages@v4
+        with:
+          artifact_name: app-site
+
+      # Pages is served through a CDN; wait until this commit is the one being served.
+      - name: Wait until the new version is live
+        env:
+          BASE: ${{ steps.pages.outputs.base_url }}
+        run: |
+          for i in $(seq 1 30); do
+            live=$(curl -fsSL -H 'Cache-Control: no-cache' "$BASE/version.txt?nocache=$RANDOM" || true)
+            if [ "$live" = "$GITHUB_SHA" ]; then echo "Live: $live"; exit 0; fi
+            echo "Waiting for $GITHUB_SHA (live: ${live:-none})…"; sleep 10
+          done
+          echo "::error::New version not live after 5 minutes"; exit 1
+
+  live:
+    name: Live tests
+    needs: deploy
+    uses: ./.github/workflows/live-tests.yml
+    permissions:
+      contents: read
+      pages: write
+      id-token: write

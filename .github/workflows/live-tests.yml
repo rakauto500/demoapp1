@@ -1,0 +1,106 @@
+# Reusable: run the full UI suite against the live GitHub Pages site and publish the
+# HTML dashboard to <site>/report/. Called by cd.yml (after deploy) and nightly.yml.
+name: Live tests
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+env:
+  DOTNET_NOLOGO: "1"
+  DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+
+jobs:
+  test-live:
+    name: Test live site
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - id: pages
+        uses: actions/configure-pages@v5
+
+      - run: dotnet build --configuration Release
+
+      # Continue the dashboard's run history from the published site.
+      - name: Fetch previous run history
+        env:
+          BASE: ${{ steps.pages.outputs.base_url }}
+        run: |
+          mkdir -p TestResults/report
+          curl -fsSL "$BASE/report/history.json" -o TestResults/report/history.json \
+            || { rm -f TestResults/report/history.json; echo "No previous history"; }
+
+      - name: Test (live site)
+        env:
+          UITEST_Test__BaseUrl: ${{ steps.pages.outputs.base_url }}/
+        run: >
+          dotnet test --no-build --configuration Release
+          --logger "trx;LogFileName=ui-tests-live.trx"
+
+      - name: Upload dashboard
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: live-report
+          path: TestResults/report/**
+          if-no-files-found: ignore
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: live-test-results
+          path: |
+            tests/**/TestResults/**/*.trx
+            tests/**/TestResults/artifacts/**
+          if-no-files-found: ignore
+
+  publish:
+    name: Publish dashboard
+    needs: test-live
+    # Publish failures too – that is when the dashboard matters most.
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}report/
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download dashboard
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: live-report
+          path: _site/report
+
+      - name: Assemble site
+        run: |
+          cp -r app/. _site/
+          echo "${GITHUB_SHA}" > _site/version.txt
+          ls -la _site _site/report || true
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          name: site-with-report
+          path: _site
+
+      - id: deployment
+        uses: actions/deploy-pages@v4
+        with:
+          artifact_name: site-with-report
+
+      - name: Summary
+        run: |
+          echo "### UI test dashboard" >> "$GITHUB_STEP_SUMMARY"
+          echo "${{ steps.deployment.outputs.page_url }}report/" >> "$GITHUB_STEP_SUMMARY"

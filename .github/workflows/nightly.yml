@@ -1,0 +1,24 @@
+# Nightly regression: full UI suite against the live GitHub Pages site every night,
+# even without new commits, then republish the dashboard (with run history).
+name: Nightly regression
+
+on:
+  schedule:
+    - cron: "17 3 * * *" # 03:17 UTC daily
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: false
+
+jobs:
+  live:
+    name: Live tests
+    uses: ./.github/workflows/live-tests.yml
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
