@@ -6,6 +6,11 @@ Run `dotnet build` and `dotnet test` before every commit; all tests must pass.
 
 ## Conventions
 - Tests contain scenarios and assertions only; locators and waits live in page objects (`Pages/`).
+- Data-driven: all test inputs and expected values come from CSV files in
+  `tests/DemoApp.UiTests/TestData/Csv/` (one file per scenario, one row per test case, unique
+  `CaseName`, optional `Categories`). Bind with `[CsvData<TCase>("file.csv")]` and a record in
+  `TestData/Cases.cs`; logged-in setup uses `Users.Standard` from `users.csv`. No data literals in tests.
+  Keep `TestData/Csv/README.md` in sync when adding or changing a CSV file.
 - Locate elements by `data-test` attributes via `BasePage.TestId()`.
 - Explicit waits only: no `Thread.Sleep`, implicit wait stays 0. The single exception is the
   opt-in visual delay in `Drivers/SlowMotion.cs` (`SlowMoMs`, default 0); never use it for synchronisation.

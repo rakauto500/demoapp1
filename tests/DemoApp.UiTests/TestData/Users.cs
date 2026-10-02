@@ -1,12 +1,11 @@
 namespace DemoApp.UiTests.TestData;
 
-public sealed record UserCredentials(string Username, string Password);
-
-/// <summary>Known accounts of the demo app. Keep test data out of test bodies.</summary>
+/// <summary>Named accounts from users.csv (column Role), for tests that only need a logged-in user.</summary>
 public static class Users
 {
-    public static readonly UserCredentials Standard = new("demo", "secret123");
-    public static readonly UserCredentials Locked = new("locked", "secret123");
-    public static readonly UserCredentials WrongPassword = new("demo", "wrong-password");
-    public static readonly UserCredentials Unknown = new("nobody", "secret123");
+    public static UserRecord Standard => Get("Standard");
+
+    public static UserRecord Get(string role) =>
+        CsvData.Load<UserRecord>("users.csv").FirstOrDefault(u => string.Equals(u.Role, role, StringComparison.OrdinalIgnoreCase))
+        ?? throw new InvalidDataException($"No user with Role '{role}' in users.csv.");
 }

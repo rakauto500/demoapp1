@@ -8,33 +8,27 @@ namespace DemoApp.UiTests.Tests;
 [Parallelizable(ParallelScope.All)]
 public sealed class LoginTests : BaseTest
 {
-    [Test]
-    [Category("Smoke")]
-    public void ValidUser_CanLogIn_AndSeesWelcomeMessage()
+    [CsvData<ValidLoginCase>("login_valid.csv")]
+    public void ValidLogin_ShowsDashboard(ValidLoginCase data)
     {
-        var dashboard = new LoginPage(Driver, BaseUrl).Open()
-            .LoginAs(Users.Standard.Username, Users.Standard.Password);
+        var dashboard = new LoginPage(Driver, BaseUrl).Open().LoginAs(data.Username, data.Password);
 
         Assert.Multiple(() =>
         {
             Assert.That(dashboard.IsLoaded, Is.True, "Dashboard should be displayed after login");
-            Assert.That(dashboard.WelcomeUserName, Is.EqualTo(Users.Standard.Username));
-            Assert.That(dashboard.Title, Is.EqualTo("DemoApp - Dashboard"));
+            Assert.That(dashboard.WelcomeUserName, Is.EqualTo(data.ExpectedWelcomeName));
+            Assert.That(dashboard.Title, Is.EqualTo(data.ExpectedTitle));
         });
     }
 
-    [TestCase("demo", "wrong-password", "Invalid username or password", TestName = "WrongPassword_ShowsError")]
-    [TestCase("nobody", "secret123", "Invalid username or password", TestName = "UnknownUser_ShowsError")]
-    [TestCase("locked", "secret123", "This account has been locked", TestName = "LockedUser_ShowsError")]
-    [TestCase("", "secret123", "Username is required", TestName = "EmptyUsername_ShowsError")]
-    [TestCase("demo", "", "Password is required", TestName = "EmptyPassword_ShowsError")]
-    public void InvalidLogin_ShowsExpectedError(string username, string password, string expectedError)
+    [CsvData<InvalidLoginCase>("login_invalid.csv")]
+    public void InvalidLogin_ShowsExpectedError(InvalidLoginCase data)
     {
-        var login = new LoginPage(Driver, BaseUrl).Open().AttemptLogin(username, password);
+        var login = new LoginPage(Driver, BaseUrl).Open().AttemptLogin(data.Username, data.Password);
 
         Assert.Multiple(() =>
         {
-            Assert.That(login.ErrorMessage, Is.EqualTo(expectedError));
+            Assert.That(login.ErrorMessage, Is.EqualTo(data.ExpectedError));
             Assert.That(login.IsLoaded, Is.True, "User should remain on the login page");
         });
     }
@@ -42,8 +36,9 @@ public sealed class LoginTests : BaseTest
     [Test]
     public void Logout_ReturnsToLoginPage()
     {
+        var user = Users.Standard;
         var login = new LoginPage(Driver, BaseUrl).Open()
-            .LoginAs(Users.Standard.Username, Users.Standard.Password)
+            .LoginAs(user.Username, user.Password)
             .Logout();
 
         Assert.That(login.IsLoaded, Is.True);

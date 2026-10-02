@@ -11,88 +11,80 @@ public sealed class TodoTests : BaseTest
     private DashboardPage _dashboard = null!;
 
     [SetUp]
-    public void LogIn() =>
-        _dashboard = new LoginPage(Driver, BaseUrl).Open()
-            .LoginAs(Users.Standard.Username, Users.Standard.Password);
-
-    [Test]
-    [Category("Smoke")]
-    public void AddTodo_AppearsInList_AndCounterIncrements()
+    public void LogIn()
     {
-        _dashboard.AddTodo("Write Selenium tests");
+        var user = Users.Standard;
+        _dashboard = new LoginPage(Driver, BaseUrl).Open().LoginAs(user.Username, user.Password);
+    }
+
+    [CsvData<AddTodoCase>("todo_add.csv")]
+    public void AddTodos_AppearInOrder_AndCounterMatches(AddTodoCase data)
+    {
+        _dashboard.AddTodos([.. data.TodoList]);
 
         Assert.Multiple(() =>
         {
-            Assert.That(_dashboard.TodoTitles, Is.EqualTo(new[] { "Write Selenium tests" }));
-            Assert.That(_dashboard.ItemsLeft, Is.EqualTo(1));
+            Assert.That(_dashboard.TodoTitles, Is.EqualTo(data.TodoList));
+            Assert.That(_dashboard.ItemsLeft, Is.EqualTo(data.ExpectedItemsLeft));
         });
     }
 
-    [Test]
-    public void AddMultipleTodos_PreservesOrder()
+    [CsvData<BlankTodoCase>("todo_blank.csv")]
+    public void BlankTodo_IsNotAdded(BlankTodoCase data)
     {
-        string[] titles = ["Plan", "Build", "Test", "Ship"];
-
-        _dashboard.AddTodos(titles);
-
-        Assert.Multiple(() =>
-        {
-            Assert.That(_dashboard.TodoTitles, Is.EqualTo(titles));
-            Assert.That(_dashboard.ItemsLeft, Is.EqualTo(titles.Length));
-        });
-    }
-
-    [TestCase("")]
-    [TestCase("   ")]
-    public void BlankTodo_IsNotAdded(string title)
-    {
-        _dashboard.SubmitTodo(title);
+        _dashboard.SubmitTodo(data.Todo);
 
         Assert.That(_dashboard.TodoTitles, Is.Empty);
     }
 
-    [Test]
-    public void CompleteTodo_StrikesThrough_AndDecrementsCounter()
+    [CsvData<CompleteTodoCase>("todo_complete.csv")]
+    public void CompleteTodos_StrikeThrough_AndCounterDecrements(CompleteTodoCase data)
     {
-        _dashboard.AddTodos("Buy milk", "Walk dog").ToggleTodo("Buy milk");
+        _dashboard.AddTodos([.. data.TodoList]);
+        foreach (var title in data.CompleteList)
+        {
+            _dashboard.ToggleTodo(title);
+        }
 
         Assert.Multiple(() =>
         {
-            Assert.That(_dashboard.IsCompleted("Buy milk"), Is.True);
-            Assert.That(_dashboard.IsCompleted("Walk dog"), Is.False);
-            Assert.That(_dashboard.ItemsLeft, Is.EqualTo(1));
+            foreach (var title in data.TodoList)
+            {
+                Assert.That(_dashboard.IsCompleted(title), Is.EqualTo(data.CompleteList.Contains(title)), $"Completed state of '{title}'");
+            }
+
+            Assert.That(_dashboard.ItemsLeft, Is.EqualTo(data.ExpectedItemsLeft));
         });
     }
 
-    [Test]
-    public void DeleteTodo_RemovesItFromList()
+    [CsvData<DeleteTodoCase>("todo_delete.csv")]
+    public void DeleteTodo_RemovesOnlyThatItem(DeleteTodoCase data)
     {
-        _dashboard.AddTodos("Keep me", "Delete me").DeleteTodo("Delete me");
+        _dashboard.AddTodos([.. data.TodoList]).DeleteTodo(data.Delete);
 
-        Assert.That(_dashboard.TodoTitles, Is.EqualTo(new[] { "Keep me" }));
+        Assert.That(_dashboard.TodoTitles, Is.EqualTo(data.ExpectedRemainingList));
     }
 
-    [Test]
-    public void Filters_ShowOnlyMatchingTodos()
+    [CsvData<FilterTodoCase>("todo_filter.csv")]
+    public void Filter_ShowsOnlyMatchingTodos(FilterTodoCase data)
     {
-        _dashboard.AddTodos("Done task", "Open task").ToggleTodo("Done task");
-
-        Assert.Multiple(() =>
+        _dashboard.AddTodos([.. data.TodoList]);
+        foreach (var title in data.CompleteList)
         {
-            Assert.That(_dashboard.FilterBy(TodoFilter.Active).TodoTitles, Is.EqualTo(new[] { "Open task" }));
-            Assert.That(_dashboard.FilterBy(TodoFilter.Completed).TodoTitles, Is.EqualTo(new[] { "Done task" }));
-            Assert.That(_dashboard.FilterBy(TodoFilter.All).TodoTitles, Has.Count.EqualTo(2));
-        });
+            _dashboard.ToggleTodo(title);
+        }
+
+        Assert.That(_dashboard.FilterBy(data.Filter).TodoTitles, Is.EqualTo(data.ExpectedVisibleList));
     }
 
-    [Test]
-    public void Todos_ArePreserved_AfterPageRefresh()
+    [CsvData<RefreshTodoCase>("todo_refresh.csv")]
+    public void Todos_ArePreserved_AfterPageRefresh(RefreshTodoCase data)
     {
-        _dashboard.AddTodo("Survive refresh");
+        _dashboard.AddTodos([.. data.TodoList]);
 
         Driver.Navigate().Refresh();
         _dashboard.WaitUntilLoaded();
 
-        Assert.That(_dashboard.TodoTitles, Is.EqualTo(new[] { "Survive refresh" }));
+        Assert.That(_dashboard.TodoTitles, Is.EqualTo(data.TodoList));
     }
 }

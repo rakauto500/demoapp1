@@ -12,7 +12,7 @@ End-to-end UI tests for a small demo web app, built with **Selenium WebDriver 4*
 Prerequisites: .NET 8 SDK and Chrome (Firefox/Edge optional).
 
 ```bash
-dotnet test                                    # build + run all 16 tests (headless Chrome)
+dotnet test                                    # build + run all 23 tests (headless Chrome)
 dotnet test --filter "TestCategory=Smoke"      # smoke tests only
 UITEST_Test__Headless=false dotnet test        # watch the browser
 UITEST_Test__Headless=false UITEST_Test__SlowMoMs=500 dotnet test -- NUnit.NumberOfTestWorkers=1  # slow motion
@@ -48,6 +48,13 @@ Selenium Manager downloads a matching browser driver on first run; on locked-dow
 Failure screenshots and page HTML are written to
 `tests/DemoApp.UiTests/bin/<config>/net8.0/TestResults/artifacts/`.
 
+## Test data (CSV)
+
+All tests are data driven: inputs and expected results live in CSV files in
+[`tests/DemoApp.UiTests/TestData/Csv/`](tests/DemoApp.UiTests/TestData/Csv/README.md) – one file per
+scenario, one row per test case. Add a row → you get a new test; no code changes. See the README in
+that folder for the columns of each file.
+
 ## Layout
 
 ```
@@ -58,7 +65,8 @@ tests/DemoApp.UiTests/
   Infrastructure/  Embedded static file server
   Pages/       Page objects (BasePage, LoginPage, DashboardPage)
   Reporting/   HTML dashboard writer + template
-  TestData/    Test accounts
+  TestData/    CSV loader, [CsvData] attribute, row records
+    Csv/       *.csv test data (edit these to add/change test cases)
   Tests/       BaseTest + LoginTests + TodoTests
 docs/        Design document (.odt)
 run-tests.ps1  Windows launcher (headed / slow motion / open report)

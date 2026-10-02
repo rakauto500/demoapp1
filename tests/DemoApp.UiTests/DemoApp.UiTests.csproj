@@ -11,6 +11,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="CsvHelper" Version="33.1.0" />
     <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="10.0.12" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="10.0.12" />
     <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="10.0.12" />
@@ -33,6 +34,8 @@
 
   <ItemGroup>
     <None Update="appsettings.json" CopyToOutputDirectory="PreserveNewest" />
+    <!-- Data-driven tests read their rows from these CSV files at discovery time. -->
+    <None Update="TestData\Csv\*.csv" CopyToOutputDirectory="PreserveNewest" />
     <EmbeddedResource Include="Reporting\report-template.html" LogicalName="DemoApp.UiTests.Reporting.report-template.html" />
     <!-- Ship the demo web app next to the test binaries so the embedded server can serve it. -->
     <None Include="..\..\app\**\*" LinkBase="wwwroot" CopyToOutputDirectory="PreserveNewest" />

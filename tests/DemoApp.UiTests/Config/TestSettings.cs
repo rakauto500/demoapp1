@@ -37,6 +37,12 @@ public sealed class TestSettings
     public string ArtifactsDirectory { get; init; } = "TestResults/artifacts";
 
     /// <summary>
+    /// Folder with the scenario CSV files. Relative paths resolve from the test binaries
+    /// folder (the files are copied there on build); absolute paths allow an external data set.
+    /// </summary>
+    public string TestDataDirectory { get; init; } = "TestData/Csv";
+
+    /// <summary>
     /// Visual aid for watching a run: milliseconds to pause (with the target element
     /// highlighted) before every click, keystroke and after every navigation.
     /// 0 = off. Never enable in CI.

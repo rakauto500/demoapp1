@@ -1,0 +1,4 @@
+CaseName,Todos,ExpectedItemsLeft,Categories
+SingleItem,Write Selenium tests,1,Smoke
+MultipleItemsKeepOrder,Plan|Build|Test|Ship,4,
+SpecialCharacters,Café & crème|<b>not bold</b>|Ünïcödé ✓,3,

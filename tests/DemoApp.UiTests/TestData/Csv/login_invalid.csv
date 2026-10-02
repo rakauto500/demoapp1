@@ -1,0 +1,6 @@
+CaseName,Username,Password,ExpectedError,Categories
+WrongPassword,demo,wrong-password,Invalid username or password,
+UnknownUser,nobody,secret123,Invalid username or password,
+LockedUser,locked,secret123,This account has been locked,
+EmptyUsername,,secret123,Username is required,
+EmptyPassword,demo,,Password is required,
