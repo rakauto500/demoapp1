@@ -30,9 +30,9 @@ jobs:
       UITEST_Test__Browser: ${{ github.event.inputs.browser || 'Chrome' }}
       UITEST_Test__Headless: "true"
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: 8.0.x
 
@@ -53,7 +53,7 @@ jobs:
       # Open index.html from the downloaded artifact for the dashboard.
       - name: Upload test results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ui-test-results
           path: |

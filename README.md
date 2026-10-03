@@ -19,7 +19,7 @@ End-to-end UI tests for a small demo web app, built with **Selenium WebDriver 4*
 Prerequisites: .NET 8 SDK and Chrome (Firefox/Edge optional).
 
 ```bash
-dotnet test                                    # build + run all 23 tests (headless Chrome)
+dotnet test                                    # build + run all 24 tests (headless Chrome)
 dotnet test --filter "TestCategory=Smoke"      # smoke tests only
 UITEST_Test__Headless=false dotnet test        # watch the browser
 UITEST_Test__Headless=false UITEST_Test__SlowMoMs=500 dotnet test -- NUnit.NumberOfTestWorkers=1  # slow motion
